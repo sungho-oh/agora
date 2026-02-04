@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>숫자 맞추기 게임</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .game-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-item {
+            margin: 10px 0;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-guess {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-guess:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+
+        .message.hint {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 2px solid #bee5eb;
+        }
+
+        .history {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .history-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .trophy {
+            font-size: 3em;
+            margin: 10px 0;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-20px);
+            }
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .bounce {
+            animation: bounce 1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 숫자 맞추기</h1>
+        <p class="subtitle">1부터 100 사이의 숫자를 맞춰보세요!</p>
+
+        <div class="game-info">
+            <div class="info-item">
+                <span class="info-label">남은 시도:</span>
+                <span id="attempts">10</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">범위:</span>
+                <span id="range">1 ~ 100</span>
+            </div>
+        </div>
+
+        <div id="message" class="message info">
+            게임을 시작합니다! 숫자를 입력하세요.
+        </div>
+
+        <div class="input-group">
+            <input type="number" id="guessInput" min="1" max="100" placeholder="숫자를 입력하세요">
+        </div>
+
+        <div class="button-group">
+            <button class="btn-guess" id="guessBtn" onclick="makeGuess()">추측하기</button>
+            <button class="btn-reset" onclick="resetGame()">새 게임</button>
+        </div>
+
+        <div class="history">
+            <h3>시도 기록</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        let targetNumber;
+        let attemptsLeft;
+        let minRange = 1;
+        let maxRange = 100;
+        let guessHistory = [];
+        let gameOver = false;
+
+        function initGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            attemptsLeft = 10;
+            minRange = 1;
+            maxRange = 100;
+            guessHistory = [];
+            gameOver = false;
+            
+            document.getElementById('attempts').textContent = attemptsLeft;
+            document.getElementById('range').textContent = `${minRange} ~ ${maxRange}`;
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessInput').disabled = false;
+            document.getElementById('guessBtn').disabled = false;
+            document.getElementById('historyList').innerHTML = '';
+            
+            showMessage('게임을 시작합니다! 숫자를 입력하세요.', 'info');
+        }
+
+        function makeGuess() {
+            if (gameOver) return;
+
+            const input = document.getElementById('guessInput');
+            const guess = parseInt(input.value);
+
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                showMessage('1부터 100 사이의 숫자를 입력해주세요!', 'error');
+                return;
+            }
+
+            if (guess < minRange || guess > maxRange) {
+                showMessage(`${minRange}부터 ${maxRange} 사이의 숫자를 입력해주세요!`, 'error');
+                return;
+            }
+
+            attemptsLeft--;
+            guessHistory.push(guess);
+            addToHistory(guess);
+
+            if (guess === targetNumber) {
+                winGame();
+            } else if (attemptsLeft === 0) {
+                loseGame();
+            } else {
+                if (guess < targetNumber) {
+                    minRange = Math.max(minRange, guess + 1);
+                    showMessage(`⬆️ 더 큰 숫자입니다! (${attemptsLeft}번 남음)`, 'hint');
+                } else {
+                    maxRange = Math.min(maxRange, guess - 1);
+                    showMessage(`⬇️ 더 작은 숫자입니다! (${attemptsLeft}번 남음)`, 'hint');
+                }
+                
+                document.getElementById('attempts').textContent = attemptsLeft;
+                document.getElementById('range').textContent = `${minRange} ~ ${maxRange}`;
+            }
+
+            input.value = '';
+            input.focus();
+        }
+
+        function winGame() {
+            gameOver = true;
+            const tries = 10 - attemptsLeft;
+            showMessage(`🎉 정답입니다! ${tries}번 만에 맞추셨어요!`, 'success');
+            document.getElementById('message').innerHTML = `
+                <div>
+                    <div class="trophy bounce">🏆</div>
+                    <div>축하합니다! 정답은 ${targetNumber}입니다!</div>
+                    <div>${tries}번 만에 맞추셨어요!</div>
+                </div>
+            `;
+            document.getElementById('guessInput').disabled = true;
+            document.getElementById('guessBtn').disabled = true;
+        }
+
+        function loseGame() {
+            gameOver = true;
+            showMessage(`😢 아쉽네요! 정답은 ${targetNumber}이었습니다.`, 'error');
+            document.getElementById('guessInput').disabled = true;
+            document.getElementById('guessBtn').disabled = true;
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+        }
+
+        function addToHistory(guess) {
+            const historyList = document.getElementById('historyList');
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            
+            let result = '';
+            if (guess === targetNumber) {
+                result = '✅ 정답!';
+            } else if (guess < targetNumber) {
+                result = '⬆️ UP';
+            } else {
+                result = '⬇️ DOWN';
+            }
+            
+            item.textContent = `${guessHistory.length}번째: ${guess} ${result}`;
+            historyList.insertBefore(item, historyList.firstChild);
+        }
+
+        function resetGame() {
+            initGame();
+        }
+
+        // Enter 키로 추측하기
+        document.getElementById('guessInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                makeGuess();
+            }
+        });
+
+        // 게임 초기화
+        initGame();
+    </script>
+</body>
+</html>
